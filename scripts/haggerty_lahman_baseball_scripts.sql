@@ -21,8 +21,31 @@ SELECT
 FROM homegames;
 
 -- 2. Find the name and height of the shortest player in the database. How many games did he play in? What is the name of the team for which he played?
-   
 
+SELECT 
+	p.playerid,
+	p.namelast,
+	p.namefirst,
+	MIN(p.height) AS min_height,
+	a.g_all,
+	t.name
+FROM people AS p
+LEFT JOIN appearances AS a
+USING (playerid)
+LEFT JOIN teams AS t
+ON a.teamid=t.teamid
+GROUP BY p.namelast, p.namefirst, t.name, a.g_all, p.playerid
+ORDER BY min_height ASC
+LIMIT 1;
+--ANSWER: Name: "Gaedel""Eddie", Height: 43, Games Played: 1, Team: "St. Louis Browns" "gaedeed01"
+
+SELECT *
+FROM appearances AS a
+WHERE playerid = 'gaedeed01';
+--Follow-up review
+
+
+ 
 -- 3. Find all players in the database who played at Vanderbilt University. Create a list showing each player’s first and last names as well as the total salary they earned in the major leagues. Sort this list in descending order by the total salary earned. Which Vanderbilt player earned the most money in the majors?
 	
 
