@@ -47,11 +47,87 @@ WHERE playerid = 'gaedeed01';
 
  
 -- 3. Find all players in the database who played at Vanderbilt University. Create a list showing each player’s first and last names as well as the total salary they earned in the major leagues. Sort this list in descending order by the total salary earned. Which Vanderbilt player earned the most money in the majors?
+
+SELECT 
+	CONCAT(p.namelast,', ',p.namefirst) AS name,
+	s.schoolname,
+	SUM(COALESCE(sal.salary,0)::NUMERIC) AS total_salary
+FROM people AS p
+INNER JOIN collegeplaying AS cp
+ON p.playerid=cp.playerid
+INNER JOIN schools AS s
+ON cp.schoolid=s.schoolid
+INNER JOIN salaries AS sal
+ON p.playerid=sal.playerid 
+WHERE s.schoolname = 'Vanderbilt University' 
+GROUP BY p.nameLast, p.namefirst, s.schoolname 
+ORDER BY total_salary DESC;
+--ANSWER: "Price, David"	"Vanderbilt University"	$245,553,888
 	
 
 -- 4. Using the fielding table, group players into three groups based on their position: label players with position OF as "Outfield", those with position "SS", "1B", "2B", and "3B" as "Infield", and those with position "P" or "C" as "Battery". Determine the number of putouts made by each of these three groups in 2016.
+--putout:A fielder is credited with a putout when he is the fielder who physically records the act of completing an out -- whether it be by stepping on the base for a forceout, tagging a runner, catching a batted ball, or catching a third strike. A fielder can also receive a putout when he is the fielder deemed by the official scorer to be the closest to a runner called out for interference. Catchers -- who record putouts by catching pitches that result in strikeouts -- and first basemen -- who record putouts by catching throws on ground-ball outs -- generally amass the highest putout totals. https://www.mlb.com/glossary/standard-stats/putout
+
+SELECT *
+FROM fielding;
+
+SELECT *
+FROM people;
+
+--First Run....
+SELECT
+	f.yearid,
+	CONCAT(p.namelast,', ',p.namefirst) AS name,
+	SUM(f.po) AS player_putout,
+	f.pos AS position,
+	CASE WHEN f.pos LIKE 'SS' OR f.pos LIKE '1B' OR f.pos LIKE'2B' OR f.pos LIKE '3B' THEN 'infield'
+		WHEN f.pos LIKE 'OF' THEN 'outfield'
+		WHEN f.pos LIKE 'P' OR f.pos LIKE 'C' THEN 'battery'
+		ELSE 'n/a' END AS position_grouping,
+FROM people as p
+LEFT JOIN fielding as f
+ON p.playerid=f.playerid
+WHERE yearid='2016'
+GROUP BY f.yearid, f.pos, p.namelast, p.namefirst
+ORDER BY position_grouping, position;
+--Reread question......read too much into question...simplify...
+
+SELECT
+	SUM(f.po) AS group_putout,
+	CASE WHEN f.pos LIKE 'SS' OR f.pos LIKE '1B' OR f.pos LIKE'2B' OR f.pos LIKE '3B' THEN 'infield'
+		WHEN f.pos LIKE 'OF' THEN 'outfield'
+		WHEN f.pos LIKE 'P' OR f.pos LIKE 'C' THEN 'battery'
+		ELSE 'n/a' END AS position_grouping
+FROM fielding as f
+WHERE yearid='2016'
+GROUP BY position_grouping;
+--ANSWER: Putouts by Group: battery=41424, outfield=29560, infield=58934
    
 -- 5. Find the average number of strikeouts per game by decade since 1920. Round the numbers you report to 2 decimal places. Do the same for home runs per game. Do you see any trends?
+
+SELECT *
+FROM Teams;
+
+SELECT 
+	CASE WHEN yearid BETWEEN '1920' AND '1929' THEN '1920s'
+		WHEN yearid BETWEEN '1930' AND '1939' THEN '1930s'
+		WHEN yearid BETWEEN '1940' AND '1949' THEN '1940s'
+		WHEN yearid BETWEEN '1950' AND '1959' THEN '1950s'
+		WHEN yearid BETWEEN '1960' AND '1969' THEN '1960s'
+		WHEN yearid BETWEEN '1970' AND '1979' THEN '1970s'
+		WHEN yearid BETWEEN '1980' AND '1989' THEN '1980s'
+		WHEN yearid BETWEEN '1990' AND '1999' THEN '1990s'
+		WHEN yearid BETWEEN '2000' AND '2009' THEN '2000s'
+		WHEN yearid BETWEEN '2010' AND '2016' THEN '2010s'
+		END AS decade,
+	ROUND(AVG(so), 2) AS avg_so,
+	ROUND(AVG(hr),2) AS avg_hr
+FROM teams
+GROUP BY decade
+ORDER BY decade
+LIMIT 10;
+--ANSWER: Query above returns AVG for SO & HR by decade. 
+
    
 
 -- 6. Find the player who had the most success stealing bases in 2016, where __success__ is measured as the percentage of stolen base attempts which are successful. (A stolen base attempt results either in a stolen base or being caught stealing.) Consider only players who attempted _at least_ 20 stolen bases.
