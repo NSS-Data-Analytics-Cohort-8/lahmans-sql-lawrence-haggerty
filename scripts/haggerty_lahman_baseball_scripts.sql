@@ -49,6 +49,7 @@ WHERE playerid = 'gaedeed01';
 -- 3. Find all players in the database who played at Vanderbilt University. Create a list showing each player’s first and last names as well as the total salary they earned in the major leagues. Sort this list in descending order by the total salary earned. Which Vanderbilt player earned the most money in the majors?
 
 SELECT 
+	p.playerid,
 	CONCAT(p.namelast,', ',p.namefirst) AS name,
 	s.schoolname,
 	SUM(COALESCE(sal.salary,0)::NUMERIC) AS total_salary
@@ -60,10 +61,39 @@ ON cp.schoolid=s.schoolid
 INNER JOIN salaries AS sal
 ON p.playerid=sal.playerid 
 WHERE s.schoolname = 'Vanderbilt University' 
-GROUP BY p.nameLast, p.namefirst, s.schoolname 
+GROUP BY p.nameLast, p.namefirst, s.schoolname, p.playerid
 ORDER BY total_salary DESC;
---ANSWER: "Price, David"	"Vanderbilt University"	$245,553,888
+--Query Returns... "Price, David"	"Vanderbilt University"	$245,553,888
+--RELOOK....total salary may be calculated incorrectly....
 	
+SELECT
+	playerid,
+	SUM(salary) AS total_salary
+FROM SALARIES
+GROUP BY playerid
+ORDER BY total_salary DESC;
+--query returns: $81,851,296 for David Price / "priceda01"
+
+SELECT 
+	CONCAT(p.namelast,', ',p.namefirst) AS name,
+	s.schoolname,
+	COALESCE(sal.sum_salary,0)::NUMERIC AS total_salary
+FROM people AS p
+LEFT JOIN collegeplaying AS cp
+ON p.playerid=cp.playerid
+LEFT JOIN schools AS s
+ON cp.schoolid=s.schoolid
+LEFT JOIN 
+	(SELECT playerid,
+	SUM(salary) AS sum_salary
+	FROM salaries
+	GROUP by playerid) AS sal
+ON p.playerid=sal.playerid
+WHERE s.schoolname = 'Vanderbilt University' 
+GROUP BY p.nameLast, p.namefirst, s.schoolname, sal.sum_salary
+ORDER BY total_salary DESC;
+--ANSWER: Price, David / $81,851,296
+
 
 -- 4. Using the fielding table, group players into three groups based on their position: label players with position OF as "Outfield", those with position "SS", "1B", "2B", and "3B" as "Infield", and those with position "P" or "C" as "Battery". Determine the number of putouts made by each of these three groups in 2016.
 --putout:A fielder is credited with a putout when he is the fielder who physically records the act of completing an out -- whether it be by stepping on the base for a forceout, tagging a runner, catching a batted ball, or catching a third strike. A fielder can also receive a putout when he is the fielder deemed by the official scorer to be the closest to a runner called out for interference. Catchers -- who record putouts by catching pitches that result in strikeouts -- and first basemen -- who record putouts by catching throws on ground-ball outs -- generally amass the highest putout totals. https://www.mlb.com/glossary/standard-stats/putout
@@ -126,8 +156,55 @@ FROM teams
 GROUP BY decade
 ORDER BY decade
 LIMIT 10;
---ANSWER: Query above returns AVG for SO & HR by decade. 
+--Query Not quite right....Need average number of strikeouts per game by decade...Above is SO based on year
 
+SELECT *
+FROM Teams;
+
+SELECT 
+	yearid,
+	SUM(so) AS sum_so,
+	SUM(hr) AS sum_hr,
+	SUM(g) AS sum_g
+FROM teams
+WHERE yearid BETWEEN '1920' AND '2016'
+GROUP BY yearid 
+ORDER BY yearid;
+--needs work???
+
+
+SELECT 
+	yearid,
+	ROUND(SUM(so)/SUM(g), 2) AS avg_so,
+	ROUND(SUM(hr)/SUM(g), 2) AS avg_hr
+FROM teams
+WHERE yearid BETWEEN '1920' AND '2016' 
+GROUP BY yearid 
+ORDER BY yearid;
+--Thinking my way through...Division Does Not Seem to Calculate Correctly???...Look at Character Type
+
+SELECT 
+		CASE WHEN yearid BETWEEN '1920' AND '1929' THEN '1920s'
+		WHEN yearid BETWEEN '1930' AND '1939' THEN '1930s'
+		WHEN yearid BETWEEN '1940' AND '1949' THEN '1940s'
+		WHEN yearid BETWEEN '1950' AND '1959' THEN '1950s'
+		WHEN yearid BETWEEN '1960' AND '1969' THEN '1960s'
+		WHEN yearid BETWEEN '1970' AND '1979' THEN '1970s'
+		WHEN yearid BETWEEN '1980' AND '1989' THEN '1980s'
+		WHEN yearid BETWEEN '1990' AND '1999' THEN '1990s'
+		WHEN yearid BETWEEN '2000' AND '2009' THEN '2000s'
+		WHEN yearid BETWEEN '2010' AND '2016' THEN '2010s'
+		END AS decade,
+		SUM(so) AS sum_so,
+		SUM(hr) AS sum_hr,
+		SUM(g) AS sum_g,
+		ROUND(SUM(so)::NUMERIC/SUM(g)::NUMERIC,2) AS avg_so,
+		ROUND(SUM(hr)::NUMERIC/SUM(g)::NUMERIC,2) AS avg_hr
+FROM teams
+GROUP BY decade
+ORDER BY decade
+LIMIT 10;
+--ANSWER: Query Above Returns AVG SO and HR by Decade!
    
 
 -- 6. Find the player who had the most success stealing bases in 2016, where __success__ is measured as the percentage of stolen base attempts which are successful. (A stolen base attempt results either in a stolen base or being caught stealing.) Consider only players who attempted _at least_ 20 stolen bases.
