@@ -227,11 +227,66 @@ LEFT JOIN batting as b
 ON p.playerid=b.playerid
 GROUP BY name, b.yearid
 HAVING b.yearid='2016' AND SUM(cs)+SUM(SB) >= '20'
-ORDER by sum_sb DESC;
-	
+ORDER by prct_success DESC;
+--ANSWER: "Owings, Chris" / Prct 91.30....21 successful of 23 attempts
 
 -- 7.  From 1970 – 2016, what is the largest number of wins for a team that did not win the world series? What is the smallest number of wins for a team that did win the world series? Doing this will probably result in an unusually small number of wins for a world series champion – determine why this is the case. Then redo your query, excluding the problem year. How often from 1970 – 2016 was it the case that a team with the most wins also won the world series? What percentage of the time?
 
+SELECT *
+FROM teams;
+
+SELECT 
+	yearid,
+	name,
+	w,
+	l,
+	COALESCE(wswin, 'NA') AS wswin,
+	SUM(w) AS wins,
+	SUM(l) AS loses
+FROM teams as t
+WHERE yearid BETWEEN '1970' AND '2016'
+GROUP BY yearid, name, wswin, w, l
+ORDER BY yearid, wins;
+--First Run
+--w & l already compiled for year...SUM is not necessary
+--1994 World Series Cancelled Due to MLB Player Strike
+
+SELECT
+	yearid,
+	name,
+	COALESCE(wswin, 'NA') AS wswin,
+	w AS wins,
+	l AS loses,
+	CASE WHEN w=MAX(w) AND wswin='N' THEN 'ws_loss_max_win'
+		WHEN W=MIN(w) AND wswin='Y' THEN 'ws_win_min_win'
+		ELSE '****' END AS ws_status
+FROM teams
+WHERE yearid BETWEEN '1970' AND '2016'
+GROUP BY yearid, name, wswin, w, l
+ORDER BY yearid;	
+--Test Query...Pulls all records does not filter down 
+
+
+SELECT
+	t.yearid,
+	name,
+	COALESCE(wswin, 'NA') AS wswin,
+	w AS wins,
+	l AS loses
+FROM teams AS t
+LEFT JOIN 
+	(SELECT
+	 yearid,
+	 CASE WHEN w=MAX(w) AND wswin='N' THEN 'ws_loss_max_win'
+		WHEN W=MIN(w) AND wswin='Y' THEN 'ws_win_min_win'
+		ELSE '****' END AS ws_status
+FROM teams 
+WHERE yearid BETWEEN '1970' AND '2016'
+GROUP BY yearid, w, wswin) AS ws_status
+ON t.yearid=ws_status.yearid
+WHERE t.yearid BETWEEN '1970' AND '2016'
+GROUP BY t.yearid, name, wswin, w, l
+ORDER BY t.yearid;
 
 -- 8. Using the attendance figures from the homegames table, find the teams and parks which had the top 5 average attendance per game in 2016 (where average attendance is defined as total attendance divided by number of games). Only consider parks where there were at least 10 games played. Report the park name, team name, and average attendance. Repeat for the lowest 5 average attendance.
 
