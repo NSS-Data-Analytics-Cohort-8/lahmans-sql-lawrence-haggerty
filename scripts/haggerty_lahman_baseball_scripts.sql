@@ -234,6 +234,7 @@ ORDER by prct_success DESC;
 
 SELECT *
 FROM teams;
+--Review Table
 
 SELECT 
 	yearid,
@@ -251,42 +252,150 @@ ORDER BY yearid, wins;
 --w & l already compiled for year...SUM is not necessary
 --1994 World Series Cancelled Due to MLB Player Strike
 
+-- SELECT
+-- 	yearid,
+-- 	name,
+-- 	COALESCE(wswin, 'NA') AS wswin,
+-- 	w AS wins,
+-- 	l AS loses,
+-- 	CASE WHEN w=MAX(w) AND wswin='N' THEN 'ws_loss_max_win'
+-- 		WHEN W=MIN(w) AND wswin='Y' THEN 'ws_win_min_win'
+-- 		ELSE '****' END AS ws_status
+-- FROM teams
+-- WHERE yearid BETWEEN '1970' AND '2016'
+-- GROUP BY yearid, name, wswin, w, l
+-- ORDER BY yearid;	
+--Test Query / Hot Garbage...Pulls / labels all records does not filter down 
+
 SELECT
 	yearid,
-	name,
-	COALESCE(wswin, 'NA') AS wswin,
-	w AS wins,
-	l AS loses,
-	CASE WHEN w=MAX(w) AND wswin='N' THEN 'ws_loss_max_win'
-		WHEN W=MIN(w) AND wswin='Y' THEN 'ws_win_min_win'
-		ELSE '****' END AS ws_status
+	name, 
+	w,
+	MAX(MAX(w)) OVER() AS max_window
 FROM teams
-WHERE yearid BETWEEN '1970' AND '2016'
-GROUP BY yearid, name, wswin, w, l
-ORDER BY yearid;	
---Test Query...Pulls all records does not filter down 
-
+WHERE wswin='N' 
+AND yearid BETWEEN '1970' AND '2016'
+GROUP BY yearid, name, w
+--HAVING MAX(w) = (SELECT MAX(MAX(w)) OVER() AS max_window FROM teams)
+ORDER BY yearid;
+--largest wins w/o ws win: 2001, Seattle Mariners, 116 wins
+--OVERKILL...MAX(MAX not required...Overthinking the problem 
 
 SELECT
-	t.yearid,
+	yearid,
+	name, 
+	w,
+	MIN(w)AS min_window
+FROM teams
+WHERE wswin='Y' 
+AND yearid BETWEEN '1970' AND '2016'
+GROUP BY yearid, name, w
+ORDER BY w;
+--Part B Answer: 1981	"Los Angeles Dodgers"	63...Year of Strike...Re
+
+
+SELECT 
+	yearid, 
 	name,
-	COALESCE(wswin, 'NA') AS wswin,
+	MIN(w),
+	wswin
+FROM teams
+WHERE wswin='Y' 
+AND yearid BETWEEN '1970' AND '2016'
+GROUP BY yearid, name, wswin
+ORDER BY yearid;
+--Run Correctly... Pulls Team By Year w/ least wins and ws win
+
+SELECT 
+	yearid, 
+	name,
+	MAX(w),
+	wswin
+FROM teams
+WHERE wswin='N' 
+AND yearid BETWEEN '1970' AND '2016'
+GROUP BY yearid, name, wswin
+ORDER BY MAX(w) DESC;
+
+
+--Working 7 Group:
+SELECT
+	yearid,
+	teamid, 
+	MAX(w) AS max_w,
+	MAX(MAX(w)) OVER() AS max_window
+FROM teams
+WHERE wswin='Y' 
+AND yearid BETWEEN '1970' AND '2016'
+GROUP BY yearid, teamid, w
+--HAVING MAX(w) = (SELECT MAX(MAX(w)) OVER() AS max_window FROM teams)
+ORDER BY yearid;
+
+--Working IT...How often from 1970 – 2016 was it the case that a team with the most wins also won the world series? What percentage of the time?
+
+SELECT 
+	yearid,
+	name,
 	w AS wins,
-	l AS loses
-FROM teams AS t
-LEFT JOIN 
-	(SELECT
-	 yearid,
-	 CASE WHEN w=MAX(w) AND wswin='N' THEN 'ws_loss_max_win'
-		WHEN W=MIN(w) AND wswin='Y' THEN 'ws_win_min_win'
-		ELSE '****' END AS ws_status
-FROM teams 
+	l AS loss,
+	COALESCE(wswin, 'NA') AS wswin,
+	SUM(w) AS wins,
+	SUM(l) AS loses
+FROM teams as t
 WHERE yearid BETWEEN '1970' AND '2016'
-GROUP BY yearid, w, wswin) AS ws_status
-ON t.yearid=ws_status.yearid
-WHERE t.yearid BETWEEN '1970' AND '2016'
-GROUP BY t.yearid, name, wswin, w, l
-ORDER BY t.yearid;
+GROUP BY yearid, name, wswin, w, l
+ORDER BY yearid, wins;
+
+--cte drill
+
+WITH cte AS(SELECT MAX(w) AS max, yearid --MAX wins each year 
+		   FROM teams
+		   WHERE yearid BETWEEN 1970 AND 2016
+		   GROUP BY yearid
+		   ORDER BY yearid),
+	cte2 AS (
+		SELECT wswin,teamid
+		FROM teams
+		WHERE wswin = 'Y' AND yearid BETWEEN 1970 AND 2016)
+SELECT teamid, teams.wswin
+FROM teams
+INNER JOIN cte
+USING (yearid)
+INNER JOIN cte2
+USING (teamid)
+WHERE teams.wswin='Y'
+GROUP BY teams.teamid, teams.wswin;
+---Break
+
+WITH champ_wins AS (
+  SELECT teamid, MAX(W) AS max_wins
+  FROM teams
+  WHERE yearID BETWEEN 1970 AND 2016 AND WSWin='Y'
+  GROUP BY teamid
+), non_champ_wins AS (
+  SELECT MAX(W) AS max_wins
+  FROM teams
+  WHERE yearID BETWEEN 1970 AND 2016 AND WSWin='N'
+)
+SELECT COUNT(*) AS num_champs, 
+  COUNT(*) * 100.0::NUMERIC / (SELECT COUNT(DISTINCT yearID) FROM teams WHERE yearID BETWEEN 1970 AND 2016 AND WSWin='Y') AS percentage
+FROM champ_wins
+JOIN non_champ_wins ON champ_wins.max_wins = non_champ_wins.max_wins;
+
+WITH cte AS (
+  SELECT teamid, MAX(W) AS max_wins
+  FROM teams
+  WHERE yearID BETWEEN 1970 AND 2016 AND WSWin='Y'
+  GROUP BY teamid)
+  
+ SELECT 
+ 	t.teamid,
+	t.wswin
+FROM teams AS t
+INNER JOIN cte
+ON t.teamid=cte.teamid 
+
+
 
 -- 8. Using the attendance figures from the homegames table, find the teams and parks which had the top 5 average attendance per game in 2016 (where average attendance is defined as total attendance divided by number of games). Only consider parks where there were at least 10 games played. Report the park name, team name, and average attendance. Repeat for the lowest 5 average attendance.
 
@@ -308,3 +417,5 @@ ORDER BY t.yearid;
 
 
 -- 13. It is thought that since left-handed pitchers are more rare, causing batters to face them less often, that they are more effective. Investigate this claim and present evidence to either support or dispute this claim. First, determine just how rare left-handed pitchers are compared with right-handed pitchers. Are left-handed pitchers more likely to win the Cy Young Award? Are they more likely to make it into the hall of fame?
+
+
