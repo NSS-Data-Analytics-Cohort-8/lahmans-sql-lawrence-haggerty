@@ -158,8 +158,8 @@ FROM Teams;
 -- LIMIT 10;
 --Query Not quite right....Need average number of strikeouts per game by decade...Above is SO based on year
 
-SELECT *
-FROM Teams;
+-- SELECT *
+-- FROM Teams;
 
 -- SELECT 
 -- 	yearid,
@@ -209,12 +209,12 @@ LIMIT 10;
 
 -- 6. Find the player who had the most success stealing bases in 2016, where __success__ is measured as the percentage of stolen base attempts which are successful. (A stolen base attempt results either in a stolen base or being caught stealing.) Consider only players who attempted _at least_ 20 stolen bases.
 
-SELECT *
-FROM Batting;
+-- SELECT *
+-- FROM Batting;
 --NOTE: CS & SB Contain NULLs / Character Type Integer
 
-SELECT *
-FROM People;
+-- SELECT *
+-- FROM People;
 
 SELECT
 	CONCAT(p.namelast,', ',p.namefirst) AS name,
@@ -232,8 +232,8 @@ ORDER by prct_success DESC;
 
 -- 7.  From 1970 – 2016, what is the largest number of wins for a team that did not win the world series? What is the smallest number of wins for a team that did win the world series? Doing this will probably result in an unusually small number of wins for a world series champion – determine why this is the case. Then redo your query, excluding the problem year. How often from 1970 – 2016 was it the case that a team with the most wins also won the world series? What percentage of the time?
 
-SELECT *
-FROM teams;
+-- SELECT *
+-- FROM teams;
 --Review Table
 
 -- SELECT 
@@ -265,7 +265,7 @@ GROUP BY yearid, name, w
 HAVING MAX(w) = (SELECT MAX(MAX(w)) OVER() AS max_window FROM teams)
 ORDER BY yearid;
 --OVERKILL...MAX(MAX not required...Overthinking the problem 
---ANSWER PART A: largest wins w/o ws win: 2001, Seattle Mariners, 116 wins
+--ANSWER 7A: largest wins w/o ws win: 2001, Seattle Mariners, 116 wins
 
 SELECT 
 	yearid, 
@@ -504,7 +504,7 @@ LEFT JOIN cte2 AS c2
 ON t1.yearid=c2.yearid AND t1.w=c2.max_w
 WHERE t1.yearid BETWEEN 1970 AND 2016 
 AND t1.wswin='Y';
---Additional / Alternate Query..ANSWER Part C: 12 Teams w/ Top Wins as WS win 1970-2016....Percentage 26.09
+--Additional / Alternate Query..ANSWER 7C: 12 Teams w/ Top Wins as WS win 1970-2016....Percentage 26.09
 
 
 -- 8. Using the attendance figures from the homegames table, find the teams and parks which had the top 5 average attendance per game in 2016 (where average attendance is defined as total attendance divided by number of games). Only consider parks where there were at least 10 games played. Report the park name, team name, and average attendance. Repeat for the lowest 5 average attendance.
@@ -543,9 +543,164 @@ ORDER BY avg_attnd ASC
 LIMIT 5;
 --ANSWER 8B: Query returns Bottom 5 Avg Attendance Parks w/ Team Name and Attendance Count
 
-
-
 -- 9. Which managers have won the TSN Manager of the Year award in both the National League (NL) and the American League (AL)? Give their full name and the teams that they were managing when they won the award.
+
+SELECT *
+FROM teams;
+
+SELECT *
+FROM people;
+
+SELECT *
+FROM awardsmanagers;
+
+SELECT *
+FROM managers;
+
+-- SELECT
+-- 	DISTINCT p.namelast,
+-- 	p.namefirst,
+-- 	am.yearid,
+-- 	am.lgid,
+-- 	am.awardid,
+-- 	t.name AS tm_name
+-- FROM awardsmanagers AS am
+-- LEFT JOIN teams AS t
+-- ON am.lgid=t.lgid AND am.yearid=t.yearid
+-- LEFT JOIN people AS p
+-- ON p.playerid=am.playerid
+-- WHERE am.lgid IN ('AL','NL') AND am.awardid LIKE 'TSN Manager of the Year'
+-- GROUP BY am.lgid, p.namelast, p.namefirst, am.awardid, t.name, am.yearid
+-- ORDER BY namelast
+-- --WHERE am.lgid LIKE 'AL' AND am.lgid LIKE 'NL' AND 
+
+--Test Query for Info
+SELECT 
+	playerid,
+	awardid,
+	yearid, 
+	lgid
+	FROM awardsmanagers
+	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML'
+	ORDER BY playerid, lgid;
+--Returns 60 rows with AL & NL TSN MoY winners
+
+WITH cte1 AS
+	(SELECT 
+	playerid,
+	awardid,
+	yearid, 
+	lgid
+	FROM awardsmanagers
+	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'NL'),
+	 cte2 AS
+	(SELECT 
+	playerid,
+	awardid,
+	--yearid, 
+	lgid
+	FROM awardsmanagers
+	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'AL'),
+	 cte3 AS
+	 (SELECT
+		playerid,
+	 	CONCAT(namelast,', ',namefirst) AS name
+	 FROM people),
+	 cte4 AS
+	 (SELECT 
+	 	yearid,
+	 	lgid,
+	 	name
+	 FROM Teams)
+SELECT
+	 --cte1.yearid AS al_awd_year,
+ 	 --cte2.yearid AS nl_awd_year,
+ 	 cte1.lgid AS al_awd_win,
+ 	 cte2.lgid AS nl_awd_win,
+	 cte3.name AS name,
+	 cte4.name AS team
+FROM awardsmanagers as am
+LEFT JOIN cte1
+ON am.playerid=cte1.playerid AND am.yearid=cte1.yearid
+LEFT JOIN cte2
+ON am.playerid=cte2.playerid --AND am.yearid=cte2.yearid
+LEFT JOIN cte3
+ON am.playerid=cte3.playerid
+LEFT JOIN cte4
+ON am.lgid=cte4.lgid AND am.yearid=cte4.yearid
+WHERE cte1.playerid=cte2.playerid AND cte1.awardid=cte2.awardid
+--WHERE cte1.lgid IS NOT NULL
+--AND cte2.lgid IS NOT NULL
+GROUP BY cte3.name,cte4.name, cte1.yearid, cte1.lgid, cte2.lgid --, cte2.yearid
+--ORDER BY cte1.yearid ASC;
+--IDs correct MGRs (Johnson Davey / Leyland Jim) and AWD Years....Does not filter down correctly
+--Keep Trying...
+
+--SAVE FOR LATER...
+--	 CASE WHEN cte1.awardid='TSN Manager of the Year' THEN 'al_tsn_moy'
+--	 	  ELSE 'no' END al_awd,
+--	 CASE WHEN cte2.awardid='TSN Manager of the Year' THEN 'nl_tsn_moy'
+--	 	  ELSE 'no' END nl_awd,
+--
+
+--NEW TRY 1236, 7MAR
+WITH cte1 AS
+	--Pull Only AL TSN MOY WINNERS
+	(SELECT 
+	playerid,
+	awardid,
+	yearid, 
+	lgid
+	FROM awardsmanagers
+	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'NL'),
+	 cte2 AS
+	 --Pull Only NL TSN MOY WINNERS
+	(SELECT 
+	playerid,
+	awardid,
+	yearid, 
+	lgid
+	FROM awardsmanagers
+	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'AL'),
+	 cte3 AS
+	 --Pull Name
+	 (SELECT
+		playerid,
+	 	CONCAT(namelast,', ',namefirst) AS name
+	 FROM people),
+	 cte4 AS
+	 --Pull Team
+	 (SELECT 
+	 	yearid,
+	 	lgid,
+	 	name
+	 FROM Teams),
+	 cte5 AS
+	 --Combined AL-NL TSN MOY Winners
+	 (SELECT 
+	playerid,
+	awardid,
+	yearid, 
+	lgid
+	FROM awardsmanagers
+	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML'
+	ORDER BY playerid, lgid)
+SELECT
+	cte3.name AS name,
+	 cte4.name AS team
+FROM cte5
+LEFT JOIN cte1
+ON cte5.playerid=cte1.playerid --AND cte5.yearid=cte1.yearid
+LEFT JOIN cte2
+ON cte5.playerid=cte2.playerid AND cte5.yearid=cte2.yearid 
+LEFT JOIN cte3
+ON cte5.playerid=cte3.playerid
+LEFT JOIN cte4
+ON cte5.lgid=cte4.lgid AND cte5.yearid=cte4.yearid
+WHERE cte1.playerid=cte2.playerid AND cte1.awardid=cte2.awardid --AND cte1.awardid=cte5.awardid AND cte2.awardid=cte5.awardid
+GROUP BY cte3.name, cte4.name --, cte5.playerid
+--ORDER BY cte5.playerid
+
 
 -- 10. Find all players who hit their career highest number of home runs in 2016. Consider only players who have played in the league for at least 10 years, and who hit at least one home run in 2016. Report the players' first and last names and the number of home runs they hit in 2016.
 
