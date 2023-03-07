@@ -48,21 +48,21 @@ WHERE playerid = 'gaedeed01';
  
 -- 3. Find all players in the database who played at Vanderbilt University. Create a list showing each player’s first and last names as well as the total salary they earned in the major leagues. Sort this list in descending order by the total salary earned. Which Vanderbilt player earned the most money in the majors?
 
-SELECT 
-	p.playerid,
-	CONCAT(p.namelast,', ',p.namefirst) AS name,
-	s.schoolname,
-	SUM(COALESCE(sal.salary,0)::NUMERIC) AS total_salary
-FROM people AS p
-INNER JOIN collegeplaying AS cp
-ON p.playerid=cp.playerid
-INNER JOIN schools AS s
-ON cp.schoolid=s.schoolid
-INNER JOIN salaries AS sal
-ON p.playerid=sal.playerid 
-WHERE s.schoolname = 'Vanderbilt University' 
-GROUP BY p.nameLast, p.namefirst, s.schoolname, p.playerid
-ORDER BY total_salary DESC;
+-- SELECT 
+-- 	p.playerid,
+-- 	CONCAT(p.namelast,', ',p.namefirst) AS name,
+-- 	s.schoolname,
+-- 	SUM(COALESCE(sal.salary,0)::NUMERIC) AS total_salary
+-- FROM people AS p
+-- INNER JOIN collegeplaying AS cp
+-- ON p.playerid=cp.playerid
+-- INNER JOIN schools AS s
+-- ON cp.schoolid=s.schoolid
+-- INNER JOIN salaries AS sal
+-- ON p.playerid=sal.playerid 
+-- WHERE s.schoolname = 'Vanderbilt University' 
+-- GROUP BY p.nameLast, p.namefirst, s.schoolname, p.playerid
+-- ORDER BY total_salary DESC;
 --Query Returns... "Price, David"	"Vanderbilt University"	$245,553,888
 --RELOOK....total salary may be calculated incorrectly....
 	
@@ -105,21 +105,21 @@ SELECT *
 FROM people;
 
 --First Run....
-SELECT
-	f.yearid,
-	CONCAT(p.namelast,', ',p.namefirst) AS name,
-	SUM(f.po) AS player_putout,
-	f.pos AS position,
-	CASE WHEN f.pos LIKE 'SS' OR f.pos LIKE '1B' OR f.pos LIKE'2B' OR f.pos LIKE '3B' THEN 'infield'
-		WHEN f.pos LIKE 'OF' THEN 'outfield'
-		WHEN f.pos LIKE 'P' OR f.pos LIKE 'C' THEN 'battery'
-		ELSE 'n/a' END AS position_grouping,
-FROM people as p
-LEFT JOIN fielding as f
-ON p.playerid=f.playerid
-WHERE yearid='2016'
-GROUP BY f.yearid, f.pos, p.namelast, p.namefirst
-ORDER BY position_grouping, position;
+-- SELECT
+-- 	f.yearid,
+-- 	CONCAT(p.namelast,', ',p.namefirst) AS name,
+-- 	SUM(f.po) AS player_putout,
+-- 	f.pos AS position,
+-- 	CASE WHEN f.pos LIKE 'SS' OR f.pos LIKE '1B' OR f.pos LIKE'2B' OR f.pos LIKE '3B' THEN 'infield'
+-- 		WHEN f.pos LIKE 'OF' THEN 'outfield'
+-- 		WHEN f.pos LIKE 'P' OR f.pos LIKE 'C' THEN 'battery'
+-- 		ELSE 'n/a' END AS position_grouping
+-- FROM people as p
+-- LEFT JOIN fielding as f
+-- ON p.playerid=f.playerid
+-- WHERE yearid='2016'
+-- GROUP BY f.yearid, f.pos, p.namelast, p.namefirst
+-- ORDER BY position_grouping, position;
 --Reread question......read too much into question...simplify...
 
 SELECT
@@ -138,49 +138,49 @@ GROUP BY position_grouping;
 SELECT *
 FROM Teams;
 
-SELECT 
-	CASE WHEN yearid BETWEEN '1920' AND '1929' THEN '1920s'
-		WHEN yearid BETWEEN '1930' AND '1939' THEN '1930s'
-		WHEN yearid BETWEEN '1940' AND '1949' THEN '1940s'
-		WHEN yearid BETWEEN '1950' AND '1959' THEN '1950s'
-		WHEN yearid BETWEEN '1960' AND '1969' THEN '1960s'
-		WHEN yearid BETWEEN '1970' AND '1979' THEN '1970s'
-		WHEN yearid BETWEEN '1980' AND '1989' THEN '1980s'
-		WHEN yearid BETWEEN '1990' AND '1999' THEN '1990s'
-		WHEN yearid BETWEEN '2000' AND '2009' THEN '2000s'
-		WHEN yearid BETWEEN '2010' AND '2016' THEN '2010s'
-		END AS decade,
-	ROUND(AVG(so), 2) AS avg_so,
-	ROUND(AVG(hr),2) AS avg_hr
-FROM teams
-GROUP BY decade
-ORDER BY decade
-LIMIT 10;
+-- SELECT 
+-- 	CASE WHEN yearid BETWEEN '1920' AND '1929' THEN '1920s'
+-- 		WHEN yearid BETWEEN '1930' AND '1939' THEN '1930s'
+-- 		WHEN yearid BETWEEN '1940' AND '1949' THEN '1940s'
+-- 		WHEN yearid BETWEEN '1950' AND '1959' THEN '1950s'
+-- 		WHEN yearid BETWEEN '1960' AND '1969' THEN '1960s'
+-- 		WHEN yearid BETWEEN '1970' AND '1979' THEN '1970s'
+-- 		WHEN yearid BETWEEN '1980' AND '1989' THEN '1980s'
+-- 		WHEN yearid BETWEEN '1990' AND '1999' THEN '1990s'
+-- 		WHEN yearid BETWEEN '2000' AND '2009' THEN '2000s'
+-- 		WHEN yearid BETWEEN '2010' AND '2016' THEN '2010s'
+-- 		END AS decade,
+-- 	ROUND(AVG(so), 2) AS avg_so,
+-- 	ROUND(AVG(hr),2) AS avg_hr
+-- FROM teams
+-- GROUP BY decade
+-- ORDER BY decade
+-- LIMIT 10;
 --Query Not quite right....Need average number of strikeouts per game by decade...Above is SO based on year
 
 SELECT *
 FROM Teams;
 
-SELECT 
-	yearid,
-	SUM(so) AS sum_so,
-	SUM(hr) AS sum_hr,
-	SUM(g) AS sum_g
-FROM teams
-WHERE yearid BETWEEN '1920' AND '2016'
-GROUP BY yearid 
-ORDER BY yearid;
+-- SELECT 
+-- 	yearid,
+-- 	SUM(so) AS sum_so,
+-- 	SUM(hr) AS sum_hr,
+-- 	SUM(g) AS sum_g
+-- FROM teams
+-- WHERE yearid BETWEEN '1920' AND '2016'
+-- GROUP BY yearid 
+-- ORDER BY yearid;
 --needs work???
 
 
-SELECT 
-	yearid,
-	ROUND(SUM(so)/SUM(g), 2) AS avg_so,
-	ROUND(SUM(hr)/SUM(g), 2) AS avg_hr
-FROM teams
-WHERE yearid BETWEEN '1920' AND '2016' 
-GROUP BY yearid 
-ORDER BY yearid;
+-- SELECT 
+-- 	yearid,
+-- 	ROUND(SUM(so)/SUM(g), 2) AS avg_so,
+-- 	ROUND(SUM(hr)/SUM(g), 2) AS avg_hr
+-- FROM teams
+-- WHERE yearid BETWEEN '1920' AND '2016' 
+-- GROUP BY yearid 
+-- ORDER BY yearid;
 --Thinking my way through...Division Does Not Seem to Calculate Correctly???...Look at Character Type
 
 SELECT 
@@ -236,36 +236,22 @@ SELECT *
 FROM teams;
 --Review Table
 
-SELECT 
-	yearid,
-	name,
-	w,
-	l,
-	COALESCE(wswin, 'NA') AS wswin,
-	SUM(w) AS wins,
-	SUM(l) AS loses
-FROM teams as t
-WHERE yearid BETWEEN '1970' AND '2016'
-GROUP BY yearid, name, wswin, w, l
-ORDER BY yearid, wins;
---First Run
---w & l already compiled for year...SUM is not necessary
---1994 World Series Cancelled Due to MLB Player Strike
-
--- SELECT
+-- SELECT 
 -- 	yearid,
 -- 	name,
+-- 	w,
+-- 	l,
 -- 	COALESCE(wswin, 'NA') AS wswin,
--- 	w AS wins,
--- 	l AS loses,
--- 	CASE WHEN w=MAX(w) AND wswin='N' THEN 'ws_loss_max_win'
--- 		WHEN W=MIN(w) AND wswin='Y' THEN 'ws_win_min_win'
--- 		ELSE '****' END AS ws_status
--- FROM teams
+-- 	SUM(w) AS wins,
+-- 	SUM(l) AS loses
+-- FROM teams as t
 -- WHERE yearid BETWEEN '1970' AND '2016'
 -- GROUP BY yearid, name, wswin, w, l
--- ORDER BY yearid;	
---Test Query / Hot Garbage...Pulls / labels all records does not filter down 
+-- ORDER BY yearid, wins;
+--First Run
+--w & l already compiled for year...SUM is not necessary
+--1981 & 1994 MLB Strike....1994 World Series Cancelled Due to MLB Player Strike
+
 
 SELECT
 	yearid,
@@ -276,128 +262,287 @@ FROM teams
 WHERE wswin='N' 
 AND yearid BETWEEN '1970' AND '2016'
 GROUP BY yearid, name, w
---HAVING MAX(w) = (SELECT MAX(MAX(w)) OVER() AS max_window FROM teams)
+HAVING MAX(w) = (SELECT MAX(MAX(w)) OVER() AS max_window FROM teams)
 ORDER BY yearid;
---largest wins w/o ws win: 2001, Seattle Mariners, 116 wins
 --OVERKILL...MAX(MAX not required...Overthinking the problem 
+--ANSWER PART A: largest wins w/o ws win: 2001, Seattle Mariners, 116 wins
 
-SELECT
-	yearid,
-	name, 
+SELECT 
+	yearid, 
+	name,
 	w,
-	MIN(w)AS min_window
-FROM teams
-WHERE wswin='Y' 
-AND yearid BETWEEN '1970' AND '2016'
-GROUP BY yearid, name, w
-ORDER BY w;
---Part B Answer: 1981	"Los Angeles Dodgers"	63...Year of Strike...Re
-
-
-SELECT 
-	yearid, 
-	name,
-	MIN(w),
-	wswin
-FROM teams
-WHERE wswin='Y' 
-AND yearid BETWEEN '1970' AND '2016'
-GROUP BY yearid, name, wswin
-ORDER BY yearid;
---Run Correctly... Pulls Team By Year w/ least wins and ws win
-
-SELECT 
-	yearid, 
-	name,
 	MAX(w),
 	wswin
 FROM teams
 WHERE wswin='N' 
 AND yearid BETWEEN '1970' AND '2016'
-GROUP BY yearid, name, wswin
+GROUP BY yearid, name, w, wswin
 ORDER BY MAX(w) DESC;
+--REWORK OF QUERY ABOVE....MAX(MAX not required...Worked, but Overthinking the problem 
+--ANSWER 7A: 2001 / Seattle Mariners / 116 wins
 
-
---Working 7 Group:
 SELECT
 	yearid,
-	teamid, 
-	MAX(w) AS max_w,
-	MAX(MAX(w)) OVER() AS max_window
+	name, 
+	w,
+	MIN(w)AS min_window,
+	wswin
 FROM teams
 WHERE wswin='Y' 
 AND yearid BETWEEN '1970' AND '2016'
-GROUP BY yearid, teamid, w
---HAVING MAX(w) = (SELECT MAX(MAX(w)) OVER() AS max_window FROM teams)
-ORDER BY yearid;
+GROUP BY yearid, name, w, wswin
+ORDER BY w;
+--ANSWER 7B: 1981 / Los Angeles Dodgers / 63 (Year of Strike...Disregard Result), Next Team: 2006 / St. Louis Cardinals / 83
 
 --Working IT...How often from 1970 – 2016 was it the case that a team with the most wins also won the world series? What percentage of the time?
 
-SELECT 
-	yearid,
-	name,
-	w AS wins,
-	l AS loss,
-	COALESCE(wswin, 'NA') AS wswin,
-	SUM(w) AS wins,
-	SUM(l) AS loses
-FROM teams as t
-WHERE yearid BETWEEN '1970' AND '2016'
-GROUP BY yearid, name, wswin, w, l
-ORDER BY yearid, wins;
+-- SELECT 
+-- 	yearid,
+-- 	name,
+-- 	w AS win,
+-- 	l AS loss,
+-- 	COALESCE(wswin, 'NA') AS wswin
+-- FROM teams as t
+-- WHERE yearid BETWEEN '1970' AND '2016'
+-- GROUP BY yearid, name, wswin, w, l
+-- HAVING w= (SELECT MAX(MAX(w)) OVER() AS max_window FROM teams)
+-- ORDER BY yearid, win;
+--RETURNS SINGLE LINE w/ HIGHEST MAX WINS AND NO WSWIN for TEAMS TABLE
 
 --cte drill
-
-WITH cte AS(SELECT MAX(w) AS max, yearid --MAX wins each year 
-		   FROM teams
-		   WHERE yearid BETWEEN 1970 AND 2016
-		   GROUP BY yearid
-		   ORDER BY yearid),
-	cte2 AS (
-		SELECT wswin,teamid
-		FROM teams
-		WHERE wswin = 'Y' AND yearid BETWEEN 1970 AND 2016)
-SELECT teamid, teams.wswin
-FROM teams
-INNER JOIN cte
-USING (yearid)
-INNER JOIN cte2
-USING (teamid)
-WHERE teams.wswin='Y'
-GROUP BY teams.teamid, teams.wswin;
+-- WITH cte AS(SELECT MAX(w) AS max, yearid --MAX wins each year 
+-- 		   FROM teams
+-- 		   WHERE yearid BETWEEN 1970 AND 2016
+-- 		   GROUP BY yearid
+-- 		   ORDER BY yearid),
+-- 	cte2 AS (
+-- 		SELECT wswin,teamid
+-- 		FROM teams
+-- 		WHERE wswin = 'Y' AND yearid BETWEEN 1970 AND 2016)
+-- SELECT teamid, teams.wswin
+-- FROM teams
+-- INNER JOIN cte
+-- USING (yearid)
+-- INNER JOIN cte2
+-- USING (teamid)
+-- WHERE teams.wswin='Y'
+-- GROUP BY teams.teamid, teams.wswin;
+--INFO RETURNED NOT USEFUL....DOES NOT APPEAR CORRECT
 ---Break
 
-WITH champ_wins AS (
-  SELECT teamid, MAX(W) AS max_wins
-  FROM teams
-  WHERE yearID BETWEEN 1970 AND 2016 AND WSWin='Y'
-  GROUP BY teamid
-), non_champ_wins AS (
-  SELECT MAX(W) AS max_wins
-  FROM teams
-  WHERE yearID BETWEEN 1970 AND 2016 AND WSWin='N'
-)
-SELECT COUNT(*) AS num_champs, 
-  COUNT(*) * 100.0::NUMERIC / (SELECT COUNT(DISTINCT yearID) FROM teams WHERE yearID BETWEEN 1970 AND 2016 AND WSWin='Y') AS percentage
-FROM champ_wins
-JOIN non_champ_wins ON champ_wins.max_wins = non_champ_wins.max_wins;
-
-WITH cte AS (
-  SELECT teamid, MAX(W) AS max_wins
-  FROM teams
-  WHERE yearID BETWEEN 1970 AND 2016 AND WSWin='Y'
-  GROUP BY teamid)
-  
- SELECT 
+--...How often from 1970 – 2016 was it the case that a team with the most wins also won the world series? What percentage of the time?
+WITH cte1 AS(
+	SELECT MAX(w) AS max, yearid --MAX wins each year 
+	FROM teams
+	WHERE yearid BETWEEN 1970 AND 2016
+	GROUP BY yearid
+	ORDER BY yearid),
+ cte2 AS (
+	SELECT 
+ 	t.yearid,
  	t.teamid,
-	t.wswin
-FROM teams AS t
-INNER JOIN cte
-ON t.teamid=cte.teamid 
+	t.wswin,
+	t.w,
+	cte1.max
+	FROM teams AS t
+	INNER JOIN cte1
+	ON t.w=cte1.max AND t.yearid=cte1.yearid
+	WHERE t.yearid BETWEEN 1970 AND 2016 AND wswin = 'Y')
+SELECT
+	--t1.yearid,
+	--t1.name,
+	--t1.w,
+	COUNT (t1.*) AS t1_count,
+	COUNT(cte1.*) AS cte1_count,
+	COUNT(cte2.max) AS max_win_w_ws_win,
+	ROUND(COUNT(cte1.*)::NUMERIC / COUNT(t1.*)::NUMERIC,2)*100 AS max_win_prcnt
+FROM teams AS t1
+LEFT JOIN cte1
+ON t1.w=cte1.max AND t1.yearid=cte1.yearid
+LEFT JOIN cte2
+ON t1.w=cte2.w AND t1.yearid=cte2.yearid
+WHERE t1.yearid BETWEEN 1970 AND 2016 AND t1.wswin = 'Y'
+--GROUP BY t1.yearid, t1.name, t1.w, cte2.max
+--ANSWERS 7C: Max Wins w/ WSWIN=12, Percent=26
 
+
+--QC Check of the 7C results returned above...
+WITH cte1 AS(
+	SELECT MAX(w) AS max, yearid --MAX wins each year 
+	FROM teams
+	WHERE yearid BETWEEN 1970 AND 2016
+	GROUP BY yearid
+	ORDER BY yearid),
+ cte2 AS (
+	SELECT 
+ 	t.yearid,
+ 	t.teamid,
+	t.wswin,
+	t.w,
+	cte1.max
+	FROM teams AS t
+	INNER JOIN cte1
+	ON t.w=cte1.max AND t.yearid=cte1.yearid
+	WHERE t.yearid BETWEEN 1970 AND 2016 AND wswin = 'Y')
+SELECT
+	t1.yearid,
+	t1.name,
+	t1.w,
+	COUNT (t1.*) AS t1_count,
+	COUNT(cte1.yearid) AS cte1_count,
+	COUNT(cte2.max) AS max_win_w_ws_win
+	--ROUND(COUNT(cte1.*)::NUMERIC / COUNT(t1.*)::NUMERIC,2)*100 AS max_win_prcnt
+FROM teams AS t1
+LEFT JOIN cte1
+ON t1.w=cte1.max AND t1.yearid=cte1.yearid
+LEFT JOIN cte2
+ON t1.w=cte2.w AND t1.yearid=cte2.yearid
+WHERE t1.yearid BETWEEN 1970 AND 2016 AND t1.wswin = 'Y'
+GROUP BY t1.yearid, t1.name, t1.w, cte2.max;
+--SELECT 4X Years and Teams to Crosscheck for accuracy...
+	---1970 Baltimore Orioles / 1975 Cincinatti Reds / 1980 Philadelhia Phillies / 1995 Atlanta Braves
+	---Above Verifies Correct
+---Use for manual check of MAX WINs and WSWIN
+SELECT 
+	yearid, name, w, wswin
+FROM teams
+WHERE yearid=2013
+ORDER BY w DESC;
+
+-- CORRECT 12 Teams with Top Wins and WS Win from 1970-2016
+--SELECT ROUND(12::NUMERIC/46::NUMERIC*100,2) AS Percent
+
+--***1970 Baltimore Orioles as Top Wins (108) and WS Win
+--***1975 Cincinatti Reds as Top Wins (108) and WS Win
+--***1976 Cincinatti Reds as Top Wins (102) and WS Win
+--***1978 New York Yankees as Top Wins (100) and WS Win
+--***1984 Detroit Tigers as Top Wins (104) and WS Win
+--***1986 New York Mets as Top Wins (108) and WS Win
+--***1989 Oakland Athletics as Top Wins (99) and WS Win
+--***1998 New York Yankees as Top Wins (114) and WS Win
+--***2007 Boston Red Sox as Top Wins (96) and WS Win
+--***2009 New York Yankees as Top Wins (103) and WS Win
+--***2013 St. Louis Cardinals / Boston Red SOX -TIE- as Top Wins (97) and Red Sox as WS winner (97 Wins)
+--***2016 Chicago Cubs as Top Wins (103) and WS Win
+
+-- SELECT
+-- 	DISTINCT yearid,
+-- 	MAX(w)::BIT AS max_w_bit, 
+-- 	MAX(w)::NUMERIC AS max_w_num
+-- FROM teams 
+-- WHERE yearid = 1970 
+-- GROUP BY w, yearid
+--HAVING MAX(w)::BIT='1'
+---Keep Working It...This was not useful...Attempt to CAST as BIT to return 0 or 1. Did not work well. 
+
+--Alternate QUERies for 7C
+WITH cte1 AS
+(SELECT
+	yearid,
+	teamid,
+	w,
+	wswin
+FROM teams
+WHERE yearid BETWEEN 1970 AND 2016 
+
+GROUP BY yearid, teamid, w, wswin),
+--Returns 46 fields covering WS winners 1970-2016
+cte2 AS
+(SELECT
+	yearid,
+	MAX(W) AS max_w
+FROM TEAMS
+GROUP BY yearid 
+ORDER BY yearid)
+--Returns 1 field per year
+SELECT
+	t1.yearid,
+	t1.name,
+	c2.max_w
+	--(SELECT ROUND(COUNT(c2.max_w)::NUMERIC / COUNT(cte1.*)::NUMERIC,2)*100 FROM cte1,cte2) AS max_w_prcnt
+FROM teams AS t1
+LEFT JOIN cte1 AS c1
+ON t1.yearid=c1.yearid AND t1.w=c1.w
+LEFT JOIN cte2 AS c2
+ON t1.yearid=c2.yearid AND t1.w=c2.max_w
+WHERE t1.yearid BETWEEN 1970 AND 2016 
+AND t1.wswin='Y'
+AND c2.max_w IS NOT NULL
+GROUP BY t1.yearid, t1.name, c2.max_w
+ORDER BY t1.yearid;
+--Using LEFT JOIN includes NULLS in max_w column...fields w/ numbers are accurate
+--INNER JOIN returns 12 field w/ NO NULLS
+--Confirms Manual Check of Top Wins & WS Win
+
+--Query that Answers Part C
+WITH cte1 AS
+(SELECT
+	yearid,
+	teamid,
+	w,
+	wswin
+FROM teams
+WHERE yearid BETWEEN 1970 AND 2016 
+AND wswin='Y'
+GROUP BY yearid, teamid, w, wswin),
+--Returns 46 fields covering WS winners 1970-2016
+cte2 AS
+(SELECT
+	yearid,
+	MAX(W) AS max_w
+FROM TEAMS
+GROUP BY yearid 
+ORDER BY yearid)
+--Returns 1 field per year
+SELECT
+	COUNT(c2.max_w) AS max_win_w_wswin,
+	ROUND(COUNT(c2.*)::NUMERIC / COUNT(c1.*)::NUMERIC,4)*100 AS max_w_win_prcnt
+FROM teams AS t1
+LEFT JOIN cte1 AS c1
+ON t1.yearid=c1.yearid AND t1.w=c1.w
+LEFT JOIN cte2 AS c2
+ON t1.yearid=c2.yearid AND t1.w=c2.max_w
+WHERE t1.yearid BETWEEN 1970 AND 2016 
+AND t1.wswin='Y';
+--Additional / Alternate Query..ANSWER Part C: 12 Teams w/ Top Wins as WS win 1970-2016....Percentage 26.09
 
 
 -- 8. Using the attendance figures from the homegames table, find the teams and parks which had the top 5 average attendance per game in 2016 (where average attendance is defined as total attendance divided by number of games). Only consider parks where there were at least 10 games played. Report the park name, team name, and average attendance. Repeat for the lowest 5 average attendance.
+
+SELECT *
+FROM homegames;
+
+SELECT *
+FROM teams;
+
+SELECT
+	h.park,
+	t.name,
+	ROUND((h.attendance::NUMERIC/h.games::NUMERIC),0) AS avg_attnd
+FROM homegames AS h
+--INNER JOIN teams AS t
+--ON h.team=t.teamid AND h.year=t.yearid
+LEFT JOIN teams AS t
+ON h.team=t.teamid AND h.year=t.yearid
+WHERE year=2016 AND games>=10
+ORDER BY avg_attnd DESC
+LIMIT 5;
+--ANSWER 8A: Query returns Top 5 Avg Attendance Parks w/ Team Name and Attendance Count
+
+SELECT
+	h.park,
+	t.name,
+	ROUND((h.attendance::NUMERIC/h.games::NUMERIC),0) AS avg_attnd
+FROM homegames AS h
+--INNER JOIN teams AS t
+--ON h.team=t.teamid AND h.year=t.yearid
+LEFT JOIN teams AS t
+ON h.team=t.teamid AND h.year=t.yearid
+WHERE year=2016 AND games>=10
+ORDER BY avg_attnd ASC
+LIMIT 5;
+--ANSWER 8B: Query returns Bottom 5 Avg Attendance Parks w/ Team Name and Attendance Count
+
 
 
 -- 9. Which managers have won the TSN Manager of the Year award in both the National League (NL) and the American League (AL)? Give their full name and the teams that they were managing when they won the award.
