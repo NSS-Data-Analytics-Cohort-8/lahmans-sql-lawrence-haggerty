@@ -613,10 +613,11 @@ WITH cte1 AS
 	 	name
 	 FROM Teams)
 SELECT
+	 --am.yearid,
 	 --cte1.yearid AS al_awd_year,
  	 --cte2.yearid AS nl_awd_year,
- 	 cte1.lgid AS al_awd_win,
- 	 cte2.lgid AS nl_awd_win,
+ 	 --cte1.lgid AS al_awd_win,
+ 	 --cte2.lgid AS nl_awd_win,
 	 cte3.name AS name,
 	 cte4.name AS team
 FROM awardsmanagers as am
@@ -627,11 +628,12 @@ ON am.playerid=cte2.playerid --AND am.yearid=cte2.yearid
 LEFT JOIN cte3
 ON am.playerid=cte3.playerid
 LEFT JOIN cte4
-ON am.lgid=cte4.lgid AND am.yearid=cte4.yearid
+ON am.yearid=cte4.yearid -- AND am.lgid=cte4.lgid AND
 WHERE cte1.playerid=cte2.playerid AND cte1.awardid=cte2.awardid
 --WHERE cte1.lgid IS NOT NULL
 --AND cte2.lgid IS NOT NULL
-GROUP BY cte3.name,cte4.name, cte1.yearid, cte1.lgid, cte2.lgid --, cte2.yearid
+GROUP BY am.yearid, cte3.name, cte4.name --, cte1.yearid, cte1.lgid, cte2.lgid --, cte2.yearid
+HAVING COUNT(DISTINCT am.yearid)>=1 AND COUNT(DISTINCT am.yearid)>=1
 --ORDER BY cte1.yearid ASC;
 --IDs correct MGRs (Johnson Davey / Leyland Jim) and AWD Years....Does not filter down correctly
 --Keep Trying...
@@ -643,68 +645,137 @@ GROUP BY cte3.name,cte4.name, cte1.yearid, cte1.lgid, cte2.lgid --, cte2.yearid
 --	 	  ELSE 'no' END nl_awd,
 --
 
---NEW TRY 1236, 7MAR
-WITH cte1 AS
-	--Pull Only AL TSN MOY WINNERS
-	(SELECT 
-	playerid,
-	awardid,
-	yearid, 
-	lgid
-	FROM awardsmanagers
-	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'NL'),
-	 cte2 AS
-	 --Pull Only NL TSN MOY WINNERS
-	(SELECT 
-	playerid,
-	awardid,
-	yearid, 
-	lgid
-	FROM awardsmanagers
-	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'AL'),
-	 cte3 AS
-	 --Pull Name
-	 (SELECT
-		playerid,
-	 	CONCAT(namelast,', ',namefirst) AS name
-	 FROM people),
-	 cte4 AS
-	 --Pull Team
-	 (SELECT 
-	 	yearid,
-	 	lgid,
-	 	name
-	 FROM Teams),
-	 cte5 AS
-	 --Combined AL-NL TSN MOY Winners
-	 (SELECT 
-	playerid,
-	awardid,
-	yearid, 
-	lgid
-	FROM awardsmanagers
-	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML'
-	ORDER BY playerid, lgid)
-SELECT
-	cte3.name AS name,
-	 cte4.name AS team
-FROM cte5
-LEFT JOIN cte1
-ON cte5.playerid=cte1.playerid --AND cte5.yearid=cte1.yearid
-LEFT JOIN cte2
-ON cte5.playerid=cte2.playerid AND cte5.yearid=cte2.yearid 
-LEFT JOIN cte3
-ON cte5.playerid=cte3.playerid
-LEFT JOIN cte4
-ON cte5.lgid=cte4.lgid AND cte5.yearid=cte4.yearid
-WHERE cte1.playerid=cte2.playerid AND cte1.awardid=cte2.awardid --AND cte1.awardid=cte5.awardid AND cte2.awardid=cte5.awardid
-GROUP BY cte3.name, cte4.name --, cte5.playerid
---ORDER BY cte5.playerid
+-- --NEW TRY 1236, 7MAR
+-- WITH cte1 AS
+-- 	--Pull Only AL TSN MOY WINNERS
+-- 	(SELECT 
+-- 	playerid,
+-- 	awardid,
+-- 	yearid, 
+-- 	lgid
+-- 	FROM awardsmanagers
+-- 	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'NL'),
+-- 	 cte2 AS
+-- 	 --Pull Only NL TSN MOY WINNERS
+-- 	(SELECT 
+-- 	playerid,
+-- 	awardid,
+-- 	yearid, 
+-- 	lgid
+-- 	FROM awardsmanagers
+-- 	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'AL'),
+-- 	 cte3 AS
+-- 	 --Pull Name
+-- 	 (SELECT
+-- 		playerid,
+-- 	 	CONCAT(namelast,', ',namefirst) AS name
+-- 	 FROM people),
+-- 	 cte4 AS
+-- 	 --Pull Team
+-- 	 (SELECT 
+-- 	 	yearid,
+-- 	 	lgid,
+-- 	 	name
+-- 	 FROM Teams),
+-- 	 cte5 AS
+-- 	 --Combined AL-NL TSN MOY Winners
+-- 	 (SELECT 
+-- 	playerid,
+-- 	--awardid,
+-- 	yearid, 
+-- 	lgid
+-- 	FROM awardsmanagers
+-- 	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML')
+--  	--GROUP BY playerid, lgid ,awardid, yearid
+--  	--HAVING COUNT(DISTINCT lgid) >=1 
+-- 	--ORDER BY playerid, lgid)
+-- SELECT
+-- 	cte3.name AS name,
+-- 	 cte4.name AS team
+-- FROM cte5
+-- LEFT JOIN cte1
+-- ON cte5.playerid=cte1.playerid AND cte5.yearid=cte1.yearid
+-- LEFT JOIN cte2
+-- ON cte5.playerid=cte2.playerid --AND cte5.yearid=cte2.yearid 
+-- LEFT JOIN cte3
+-- ON cte5.playerid=cte3.playerid
+-- LEFT JOIN cte4
+-- ON cte5.lgid=cte4.lgid AND cte5.yearid=cte4.yearid 
+-- WHERE cte1.playerid=cte2.playerid AND cte1.yearid=cte2.yearid --AND cte5.lgid IN ('AL','NL')--AND cte1.awardid=cte5.awardid AND cte2.awardid=cte5.awardid
+-- GROUP BY cte3.name, cte5.playerid --cte4.name
+-- --HAVING COUNT(DISTINCT cte1.awardid)>=1 AND COUNT(DISTINCT cte2.awardid)>=1
+-- --ORDER BY cte5.playerid
+
+--Caitlins Pulls 6 Years
+SELECT a.playerid, COUNT(DISTINCT a.lgid), b.yearid
+		FROM awardsmanagers AS a
+		LEFT JOIN awardsmanagers as b
+		USING (playerid)
+		WHERE a.awardid = 'TSN Manager of the Year'
+			AND a.lgid <> 'ML'
+		GROUP BY a.playerid, b.yearid
+		HAVING COUNT(DISTINCT a.lgid)>=2
 
 
 -- 10. Find all players who hit their career highest number of home runs in 2016. Consider only players who have played in the league for at least 10 years, and who hit at least one home run in 2016. Report the players' first and last names and the number of home runs they hit in 2016.
 
+-- SELECT
+-- 	yearid,
+-- 	playerid,
+-- 	--hr,
+-- 	SUM(hr)
+-- FROM batting
 
+-- GROUP BY playerid, yearid 
+-- HAVING SUM(hr) >= 1
+
+--Amanda Lecture
+-- SELECT playerid,
+-- 		yearid,
+-- 	   hr
+-- FROM batting
+-- WHERE yearid=2016 AND HR>=1 AND yearid IS NOT NULL
+-- --GROUP BY (playerid, yearid)
+-- ORDER BY playerid, yearid
+
+
+--answers career high >10yrs
+
+WITH cte1 AS
+(SELECT 
+  playerID, 
+  MAX(HR) AS career_high_hr
+FROM 
+  Batting
+WHERE 
+  HR > 0 
+GROUP BY 
+  playerID 
+HAVING 
+  COUNT(DISTINCT yearID) >= 10),
+  cte2 AS
+	(SELECT yearid,
+	  playerid,
+	   MAX(hr)
+FROM batting
+WHERE yearid = '2016'
+GROUP BY playerid, yearid
+HAVING MAX(hr) >=1) --AND COUNT(yearID) >= 10	 
+ SELECT
+ cte2.yearid,
+ CONCAT(p.namelast,', ',p.namefirst) AS name,
+ cte1.career_high_hr
+ FROM batting as b
+ LEFT JOIN people as p
+ USING (playerid)
+ LEFT JOIN cte1
+ USING (playerid)
+ LEFT JOIN cte2
+ USING (playerid)
+ WHERE cte1.career_high_hr IS NOT NULL AND cte2.yearid IS NOT NULL
+ GROUP BY b.playerid, p.namelast, p.namefirst, cte1.career_high_hr, cte2.yearid
+ 
+ 
 -- **Open-ended questions**
 
 -- 11. Is there any correlation between number of wins and team salary? Use data from 2000 and later to answer this question. As you do this analysis, keep in mind that salaries across the whole league tend to increase together, so you may want to look on a year-by-year basis.
