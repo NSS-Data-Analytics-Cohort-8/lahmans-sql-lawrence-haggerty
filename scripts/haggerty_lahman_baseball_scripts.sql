@@ -575,6 +575,15 @@ FROM managers;
 -- --WHERE am.lgid LIKE 'AL' AND am.lgid LIKE 'NL' AND 
 
 --Test Query for Info
+SELECT
+	playerid,
+	namelast,
+	yearid,
+	teamid
+FROM people, teams
+WHERE playerid='leylaji99' OR playerid='johnsda02'
+AND yearid IN (1988, 1990 ,1992, 1997, 2006, 2012)
+
 SELECT 
 	playerid,
 	awardid,
@@ -706,16 +715,46 @@ HAVING COUNT(DISTINCT am.yearid)>=1 AND COUNT(DISTINCT am.yearid)>=1
 -- --HAVING COUNT(DISTINCT cte1.awardid)>=1 AND COUNT(DISTINCT cte2.awardid)>=1
 -- --ORDER BY cte5.playerid
 
---Caitlins Pulls 6 Years
-SELECT a.playerid, COUNT(DISTINCT a.lgid), b.yearid
+--#9...Finally...A Winner
+WITH cte1 AS
+	 (SELECT
+		playerid,
+	 	CONCAT(namelast,', ',namefirst) AS name
+	 FROM people),
+	 cte2 AS 
+	 (SELECT
+		yearid,
+		teamid,
+	  	lgid,
+		playerid
+	 FROM managers)
+SELECT cte1.name, COUNT(DISTINCT a.lgid), b.yearid, cte2.teamid
 		FROM awardsmanagers AS a
 		LEFT JOIN awardsmanagers as b
 		USING (playerid)
+		LEFT JOIN cte1
+		USING(playerid)
+		LEFT JOIN cte2
+		ON cte1.playerid=cte2.playerid AND b.yearid=cte2.yearid 
 		WHERE a.awardid = 'TSN Manager of the Year'
 			AND a.lgid <> 'ML'
-		GROUP BY a.playerid, b.yearid
-		HAVING COUNT(DISTINCT a.lgid)>=2
+		GROUP BY cte1.name, b.yearid, cte2.teamid
+		HAVING COUNT(DISTINCT a.lgid)>=2 
+		ORDER BY yearid DESC
+--ANSWER 9: Davey Johnson: Nationals & Orioles / Jim Leyland: Tigers & Pirates
 
+--QC Query Above..Verifies Correct
+SELECT
+	yearid,
+	teamid,
+	playerid
+FROM managers
+WHERE playerid = 'leylaji99' OR playerid = 'johnsda02'
+AND yearid IN (2012, 2006, 1997, 1992, 1990, 1988)
+
+
+
+--WHERE cte1.playerid=cte2.playerid AND cte1.awardid=cte2.awardid
 
 -- 10. Find all players who hit their career highest number of home runs in 2016. Consider only players who have played in the league for at least 10 years, and who hit at least one home run in 2016. Report the players' first and last names and the number of home runs they hit in 2016.
 
@@ -740,7 +779,6 @@ SELECT a.playerid, COUNT(DISTINCT a.lgid), b.yearid
 
 
 --answers career high >10yrs
-
 WITH cte1 AS
 (SELECT 
   playerID, 
