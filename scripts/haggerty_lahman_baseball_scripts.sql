@@ -557,32 +557,7 @@ FROM awardsmanagers;
 SELECT *
 FROM managers;
 
--- SELECT
--- 	DISTINCT p.namelast,
--- 	p.namefirst,
--- 	am.yearid,
--- 	am.lgid,
--- 	am.awardid,
--- 	t.name AS tm_name
--- FROM awardsmanagers AS am
--- LEFT JOIN teams AS t
--- ON am.lgid=t.lgid AND am.yearid=t.yearid
--- LEFT JOIN people AS p
--- ON p.playerid=am.playerid
--- WHERE am.lgid IN ('AL','NL') AND am.awardid LIKE 'TSN Manager of the Year'
--- GROUP BY am.lgid, p.namelast, p.namefirst, am.awardid, t.name, am.yearid
--- ORDER BY namelast
--- --WHERE am.lgid LIKE 'AL' AND am.lgid LIKE 'NL' AND 
-
 --Test Query for Info
-SELECT
-	playerid,
-	namelast,
-	yearid,
-	teamid
-FROM people, teams
-WHERE playerid='leylaji99' OR playerid='johnsda02'
-AND yearid IN (1988, 1990 ,1992, 1997, 2006, 2012)
 
 SELECT 
 	playerid,
@@ -594,6 +569,7 @@ SELECT
 	ORDER BY playerid, lgid;
 --Returns 60 rows with AL & NL TSN MoY winners
 
+--First Run...
 WITH cte1 AS
 	(SELECT 
 	playerid,
@@ -606,7 +582,7 @@ WITH cte1 AS
 	(SELECT 
 	playerid,
 	awardid,
-	--yearid, 
+	yearid, 
 	lgid
 	FROM awardsmanagers
 	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'AL'),
@@ -616,104 +592,99 @@ WITH cte1 AS
 	 	CONCAT(namelast,', ',namefirst) AS name
 	 FROM people),
 	 cte4 AS
-	 (SELECT 
-	 	yearid,
-	 	lgid,
-	 	name
-	 FROM Teams)
+	 (SELECT
+		yearid,
+		teamid,
+	  	lgid,
+		playerid
+	 FROM managers)
 SELECT
-	 --am.yearid,
-	 --cte1.yearid AS al_awd_year,
- 	 --cte2.yearid AS nl_awd_year,
+	 am.yearid,
+	 cte1.yearid AS al_awd_year,
+ 	 cte2.yearid AS nl_awd_year,
  	 --cte1.lgid AS al_awd_win,
  	 --cte2.lgid AS nl_awd_win,
 	 cte3.name AS name,
-	 cte4.name AS team
+	 cte4.teamid AS team
 FROM awardsmanagers as am
 LEFT JOIN cte1
 ON am.playerid=cte1.playerid AND am.yearid=cte1.yearid
 LEFT JOIN cte2
-ON am.playerid=cte2.playerid --AND am.yearid=cte2.yearid
+ON am.playerid=cte2.playerid 
 LEFT JOIN cte3
 ON am.playerid=cte3.playerid
 LEFT JOIN cte4
-ON am.yearid=cte4.yearid -- AND am.lgid=cte4.lgid AND
-WHERE cte1.playerid=cte2.playerid AND cte1.awardid=cte2.awardid
---WHERE cte1.lgid IS NOT NULL
---AND cte2.lgid IS NOT NULL
-GROUP BY am.yearid, cte3.name, cte4.name --, cte1.yearid, cte1.lgid, cte2.lgid --, cte2.yearid
-HAVING COUNT(DISTINCT am.yearid)>=1 AND COUNT(DISTINCT am.yearid)>=1
---ORDER BY cte1.yearid ASC;
---IDs correct MGRs (Johnson Davey / Leyland Jim) and AWD Years....Does not filter down correctly
+ON am.yearid=cte4.yearid AND am.playerid=cte4.playerid
+--WHERE cte1.playerid=cte2.playerid AND cte1.awardid=cte2.awardid
+WHERE cte1.lgid IS NOT NULL
+AND cte2.lgid IS NOT NULL
+GROUP BY am.yearid, cte3.name, cte4.teamid , cte1.yearid, cte2.yearid --, cte1.lgid, cte2.lgid 
+--HAVING COUNT(DISTINCT am.yearid)>=1 AND COUNT(DISTINCT am.yearid)>=1
+ORDER BY cte1.yearid ASC;
+--IDs correct MGRs (Johnson Davey / Leyland Jim) and AWD Years....Does not ID Teams correctly
 --Keep Trying...
 
---SAVE FOR LATER...
---	 CASE WHEN cte1.awardid='TSN Manager of the Year' THEN 'al_tsn_moy'
---	 	  ELSE 'no' END al_awd,
---	 CASE WHEN cte2.awardid='TSN Manager of the Year' THEN 'nl_tsn_moy'
---	 	  ELSE 'no' END nl_awd,
---
 
--- --NEW TRY 1236, 7MAR
--- WITH cte1 AS
--- 	--Pull Only AL TSN MOY WINNERS
--- 	(SELECT 
--- 	playerid,
--- 	awardid,
--- 	yearid, 
--- 	lgid
--- 	FROM awardsmanagers
--- 	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'NL'),
--- 	 cte2 AS
--- 	 --Pull Only NL TSN MOY WINNERS
--- 	(SELECT 
--- 	playerid,
--- 	awardid,
--- 	yearid, 
--- 	lgid
--- 	FROM awardsmanagers
--- 	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'AL'),
--- 	 cte3 AS
--- 	 --Pull Name
--- 	 (SELECT
--- 		playerid,
--- 	 	CONCAT(namelast,', ',namefirst) AS name
--- 	 FROM people),
--- 	 cte4 AS
--- 	 --Pull Team
--- 	 (SELECT 
--- 	 	yearid,
--- 	 	lgid,
--- 	 	name
--- 	 FROM Teams),
--- 	 cte5 AS
--- 	 --Combined AL-NL TSN MOY Winners
--- 	 (SELECT 
--- 	playerid,
--- 	--awardid,
--- 	yearid, 
--- 	lgid
--- 	FROM awardsmanagers
--- 	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML')
---  	--GROUP BY playerid, lgid ,awardid, yearid
---  	--HAVING COUNT(DISTINCT lgid) >=1 
--- 	--ORDER BY playerid, lgid)
--- SELECT
--- 	cte3.name AS name,
--- 	 cte4.name AS team
--- FROM cte5
--- LEFT JOIN cte1
--- ON cte5.playerid=cte1.playerid AND cte5.yearid=cte1.yearid
--- LEFT JOIN cte2
--- ON cte5.playerid=cte2.playerid --AND cte5.yearid=cte2.yearid 
--- LEFT JOIN cte3
--- ON cte5.playerid=cte3.playerid
--- LEFT JOIN cte4
--- ON cte5.lgid=cte4.lgid AND cte5.yearid=cte4.yearid 
--- WHERE cte1.playerid=cte2.playerid AND cte1.yearid=cte2.yearid --AND cte5.lgid IN ('AL','NL')--AND cte1.awardid=cte5.awardid AND cte2.awardid=cte5.awardid
--- GROUP BY cte3.name, cte5.playerid --cte4.name
--- --HAVING COUNT(DISTINCT cte1.awardid)>=1 AND COUNT(DISTINCT cte2.awardid)>=1
--- --ORDER BY cte5.playerid
+--Attempt at 9
+WITH cte1 AS
+ 	--Pull Only AL TSN MOY WINNERS
+ 	(SELECT 
+ 	playerid,
+ 	awardid,
+ 	yearid, 
+ 	lgid
+ 	FROM awardsmanagers
+ 	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'NL'),
+ 	 cte2 AS
+ 	 --Pull Only NL TSN MOY WINNERS
+ 	(SELECT 
+ 	playerid,
+ 	awardid,
+ 	yearid, 
+ 	lgid
+ 	FROM awardsmanagers
+ 	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML' AND lgid NOT LIKE 'AL'),
+ 	 cte3 AS
+ 	 --Pull Name
+ 	 (SELECT
+ 		playerid,
+ 	 	CONCAT(namelast,', ',namefirst) AS name
+ 	 FROM people),
+ 	 cte4 AS
+ 	 --Pull Team
+ 	 (SELECT
+		yearid,
+		teamid,
+	  	lgid,
+		playerid
+	 FROM managers),
+ 	 cte5 AS
+ 	 --Combined AL-NL TSN MOY Winners
+ 	 (SELECT 
+ 	playerid,
+ 	awardid,
+ 	yearid, 
+ 	lgid
+ 	FROM awardsmanagers
+ 	WHERE  awardid LIKE 'TSN Manager of the Year' AND lgid NOT LIKE 'ML')
+SELECT
+cte5.yearid,
+cte3.name AS name,
+cte4.teamid AS team
+FROM cte5
+LEFT JOIN cte1
+ON cte5.playerid=cte1.playerid AND cte5.yearid=cte1.yearid
+LEFT JOIN cte2
+ON cte5.playerid=cte2.playerid  
+LEFT JOIN cte3
+ON cte5.playerid=cte3.playerid
+LEFT JOIN cte4
+ON cte5.playerid=cte4.playerid AND cte5.yearid=cte4.yearid 
+GROUP BY cte3.name, cte5.yearid, cte4.teamid
+HAVING COUNT(DISTINCT cte1.awardid)>=1 AND COUNT(DISTINCT cte2.awardid)>=1
+ORDER BY cte5.yearid
+--Returns Correct Names, Some Years, and Incomplete Teams
+--Keep Working...
 
 --#9...Finally...A Winner
 WITH cte1 AS
@@ -753,65 +724,131 @@ WHERE playerid = 'leylaji99' OR playerid = 'johnsda02'
 AND yearid IN (2012, 2006, 1997, 1992, 1990, 1988)
 
 
-
---WHERE cte1.playerid=cte2.playerid AND cte1.awardid=cte2.awardid
-
 -- 10. Find all players who hit their career highest number of home runs in 2016. Consider only players who have played in the league for at least 10 years, and who hit at least one home run in 2016. Report the players' first and last names and the number of home runs they hit in 2016.
 
--- SELECT
--- 	yearid,
--- 	playerid,
--- 	--hr,
--- 	SUM(hr)
--- FROM batting
+SELECT *
+FROM batting;
 
--- GROUP BY playerid, yearid 
--- HAVING SUM(hr) >= 1
-
---Amanda Lecture
--- SELECT playerid,
--- 		yearid,
--- 	   hr
--- FROM batting
--- WHERE yearid=2016 AND HR>=1 AND yearid IS NOT NULL
--- --GROUP BY (playerid, yearid)
--- ORDER BY playerid, yearid
-
-
---answers career high >10yrs
+--Personal Query for Project
 WITH cte1 AS
-(SELECT 
-  playerID, 
-  MAX(HR) AS career_high_hr
-FROM 
-  Batting
-WHERE 
-  HR > 0 
-GROUP BY 
-  playerID 
-HAVING 
-  COUNT(DISTINCT yearID) >= 10),
-  cte2 AS
-	(SELECT yearid,
-	  playerid,
-	   MAX(hr)
+--Determine SUM HR Player >= 10 yr (returns 1462 rows)
+--Did not call on this CTE in the main query below. 
+	(SELECT 
+		playerid,
+	SUM(hr) as sum_hr
+	FROM batting
+	WHERE hr > 0
+	GROUP BY playerid
+	HAVING COUNT(yearid) >= 10
+	ORDER BY sum_hr DESC),
+	cte2 AS
+--Determine Players >= 10yrs (returns 3863 rows)
+	(SELECT
+		playerid,
+		COUNT(yearid) AS years
+	FROM batting
+	GROUP BY playerid
+	HAVING COUNT(yearid) >= 10),
+	cte3 AS
+--Determine Player >= 1hr 2016 (returns 542 rows)
+	(SELECT
+		playerid,
+		hr as hr_2016
+	FROM batting
+	WHERE yearid = 2016
+		AND hr >= 1
+	ORDER BY hr_2016 DESC),
+	cte4 AS
+--Pull info from People Table (returns 19112 rows)
+	(SELECT
+	playerid,
+	CONCAT(namelast,', ',namefirst) AS name	
+	FROM people)
+SELECT
+	cte2.playerid,
+	cte4.name,
+	cte3.hr_2016
 FROM batting
-WHERE yearid = '2016'
-GROUP BY playerid, yearid
-HAVING MAX(hr) >=1) --AND COUNT(yearID) >= 10	 
- SELECT
- cte2.yearid,
- CONCAT(p.namelast,', ',p.namefirst) AS name,
- cte1.career_high_hr
- FROM batting as b
- LEFT JOIN people as p
- USING (playerid)
- LEFT JOIN cte1
- USING (playerid)
- LEFT JOIN cte2
- USING (playerid)
- WHERE cte1.career_high_hr IS NOT NULL AND cte2.yearid IS NOT NULL
- GROUP BY b.playerid, p.namelast, p.namefirst, cte1.career_high_hr, cte2.yearid
+INNER JOIN cte1 --Determine SUM HR Player >= 10 yr (returns 1462 rows)
+USING (playerid)
+INNER JOIN cte2 --Determine Players >= 10yrs (returns 3863 rows)
+USING (playerid)
+INNER JOIN cte3 --Determine Player >= 1hr 2016 (returns 542 rows)
+USING (playerid)
+INNER JOIN cte4 --Pull info from People Table (returns 19112 rows)
+ON cte2.playerid=cte4.playerid
+GROUP BY cte2.playerid, cte4.name, cte3.hr_2016
+ORDER by cte3.hr_2016 DESC
+
+
+--Individual Queries Used for CTEs used in Personal Query Above
+/*
+--Determine SUM HR Player >= 10 yr (returns 1462 rows)
+SELECT 
+	playerid,
+	MAX(hr) as max_hr,
+	SUM(hr) as sum_hr
+FROM batting
+WHERE hr > 0
+GROUP BY playerid
+HAVING COUNT(yearid) >= 10
+ORDER BY sum_hr DESC
+--Determine Players >= 10yrs (returns 3863 rows)
+SELECT
+	playerid,
+	COUNT(yearid) AS years
+FROM batting
+	GROUP BY playerid
+	HAVING COUNT(yearid) >= 10	
+--Determine Player >= 1hr 2016 (returns 542 rows)
+SELECT
+	playerid,
+	hr as hr_2016
+FROM batting
+WHERE yearid = 2016
+	AND hr >= 1
+ORDER BY hr_2016 DESC	
+--Pull info from People Table
+SELECT
+	playerid,
+CONCAT(namelast,', ',namefirst) AS name	
+FROM people */
+
+--GROUP QUERY for Project
+WITH cte1 AS
+ (SELECT 
+   playerID, 
+   MAX(HR) AS career_high_hr
+   FROM 
+   Batting
+   WHERE 
+   HR > 0 
+   GROUP BY 
+   playerID 
+   HAVING 
+   COUNT(DISTINCT yearID) >= 10),
+   cte2 AS
+ 	(SELECT yearid,
+ 	  playerid,
+ 	   MAX(hr)
+  FROM batting
+  WHERE yearid = '2016'
+  GROUP BY playerid, yearid
+  HAVING MAX(hr) >=1) --AND COUNT(yearID) >= 10	 
+  SELECT
+  cte2.yearid,
+  CONCAT(p.namelast,', ',p.namefirst) AS name,
+  cte1.career_high_hr
+  FROM batting as b
+  LEFT JOIN people as p
+  USING (playerid)
+  LEFT JOIN cte1
+  USING (playerid)
+  LEFT JOIN cte2
+  USING (playerid)
+  WHERE cte1.career_high_hr IS NOT NULL AND cte2.yearid IS NOT NULL
+  GROUP BY b.playerid, p.namelast, p.namefirst, cte1.career_high_hr, cte2.yearid
+
  
  
 -- **Open-ended questions**
