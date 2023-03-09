@@ -830,15 +830,15 @@ WITH cte1 AS
    cte2 AS
  	(SELECT yearid,
  	  playerid,
- 	   MAX(hr)
+ 	   MAX(hr) 
   FROM batting
   WHERE yearid = '2016'
-  GROUP BY playerid, yearid
+  GROUP BY playerid, yearid, hr
   HAVING MAX(hr) >=1) --AND COUNT(yearID) >= 10	 
   SELECT
   cte2.yearid,
   CONCAT(p.namelast,', ',p.namefirst) AS name,
-  cte1.career_high_hr
+  cte2.max --cte1.career_high_hr
   FROM batting as b
   LEFT JOIN people as p
   USING (playerid)
@@ -847,7 +847,8 @@ WITH cte1 AS
   LEFT JOIN cte2
   USING (playerid)
   WHERE cte1.career_high_hr IS NOT NULL AND cte2.yearid IS NOT NULL
-  GROUP BY b.playerid, p.namelast, p.namefirst, cte1.career_high_hr, cte2.yearid
+  GROUP BY b.playerid, p.namelast, p.namefirst, cte2.yearid, cte2.max--, cte1.career_high_hr
+  ORDER BY cte2.max DESC
 
 -- **Open-ended questions**
 
@@ -859,6 +860,7 @@ FROM salaries;
 SELECT *
 FROM teams;
 
+--Complete Pull of Team Salaries / Wins / Cost Per Win 2000 - 2016
 WITH cte AS
 	(SELECT 
 		yearid,
@@ -869,18 +871,21 @@ WITH cte AS
 	 GROUP BY yearid, teamid)
 SELECT
 	cte.yearid, cte.teamid, cte.sum_salary, t.w AS wins, 
-	ROUND(cte.sum_salary::NUMERIC/t.w::NUMERIC,0) as cost_per_win, cte.rn
+	ROUND(cte.sum_salary::NUMERIC/t.w::NUMERIC,0) as cost_per_win --, cte.rn as rank_by_yr
 FROM salaries as s
 LEFT JOIN cte
 USING (yearid, teamid)
 LEFT JOIN teams as t
 ON s.yearid=t.yearid AND s.teamid=t.teamid
-WHERE cte.rn <= 3
+WHERE s.yearid >=2000
+--AND cte.rn <= 3
 --AND s.yearid = 2016
 GROUP BY cte.yearid, cte.teamid, cte.sum_salary, t.w, cte.rn
-ORDER BY yearid DESC, wins DESC --rn
---ORDER BY sum_salary DESC
---LIMIT 3;
+--ORDER BY cte.sum_salary DESC
+ORDER BY cost_per_win DESC
+--ORDER BY yearid DESC, wins DESC --rn
+--ORDER BY wins DESC, cost_per_win
+
 
 ----Top 3 Team Salaries Per Year w/ Wins and Cost Per Win
  WITH cte AS
@@ -889,12 +894,16 @@ ORDER BY yearid DESC, wins DESC --rn
     FROM salaries
   	GROUP BY yearid, teamid)
 SELECT cte.yearid, cte.teamid, cte.sum AS sum_salary, teams.w AS wins, 
-	ROUND(cte.sum::NUMERIC/teams.w::NUMERIC,0) as cost_per_win, rn
+	ROUND(cte.sum::NUMERIC/teams.w::NUMERIC,0) as cost_per_win, rn AS rank_by_year
 FROM cte
 LEFT JOIN teams
 ON cte.yearid=teams.yearid AND cte.teamid=teams.teamid
 WHERE rn <= 3
-ORDER BY yearid DESC, sum_salary DESC --rn 
+ORDER BY cost_per_win DESC
+--ORDER BY yearid DESC, wins DESC --rn 
+LIMIT 10;
+----Top 3 Team Salaries Per Year w/ Wins and Cost Per Win / Ordered BY cost_per_win DESC, LIMIT 10
+--Salaries range from 173 - 231M / Cost per win (based on total salary) ranges from 2.3 - 2.7M / Wins range from 69 - 92 wins / Years Captured: 2009 - 2016
 
 ----Bottom 3 Team Salaries Per Year w/ Wins and Cost Per Win
  WITH cte AS
@@ -908,9 +917,19 @@ FROM cte
 LEFT JOIN teams
 ON cte.yearid=teams.yearid AND cte.teamid=teams.teamid
 WHERE rn <= 3
-ORDER BY yearid DESC, sum_salary DESC --rn 
+ORDER BY cost_per_win DESC
+--ORDER BY yearid DESC, wins DESC --rn 
+LIMIT 10;
+----Bottom 3 Team Salaries Per Year w/ Wins and Cost Per Win / Ordered BY cost_per_win DESC, LIMIT 10
+--Salaries range from 48 - 68M / Cost per win (based on total salary) ranges from 726K - 1.1M / Wins range from 55 - 80 wins / Years Captured: 2009 - 2016
 
-
+--ANSWER:
+--Based on a review of the information in the salaries & teams table...Teams with a HIGHER SALARY appear to generally have a greater number of WINS. However, there is overlap in the range of wins for teams with both LOW & HIGH salaries that indicate factors outside of salary may also influence a teams number of wins. Review notes below:
+--From last 2 queries above.....
+----Top 3 Team Salaries Per Year w/ Wins and Cost Per Win / Ordered BY cost_per_win DESC, LIMIT 10
+--Salaries range from 173 - 231M / Cost per win (based on total salary) ranges from 2.3 - 2.7M / Wins range from 69 - 92 wins / Years Captured: 2009 - 2016
+----Bottom 3 Team Salaries Per Year w/ Wins and Cost Per Win / Ordered BY cost_per_win DESC, LIMIT 10
+--Salaries range from 48 - 68M / Cost per win (based on total salary) ranges from 726K - 1.1M / Wins range from 55 - 80 wins / Years Captured: 2009 - 2016
 
 -- 12. In this question, you will explore the connection between number of wins and attendance.
 --     <ol type="a">
