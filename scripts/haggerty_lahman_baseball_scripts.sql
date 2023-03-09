@@ -849,11 +849,68 @@ WITH cte1 AS
   WHERE cte1.career_high_hr IS NOT NULL AND cte2.yearid IS NOT NULL
   GROUP BY b.playerid, p.namelast, p.namefirst, cte1.career_high_hr, cte2.yearid
 
- 
- 
 -- **Open-ended questions**
 
 -- 11. Is there any correlation between number of wins and team salary? Use data from 2000 and later to answer this question. As you do this analysis, keep in mind that salaries across the whole league tend to increase together, so you may want to look on a year-by-year basis.
+
+SELECT *
+FROM salaries;
+
+SELECT *
+FROM teams;
+
+WITH cte AS
+	(SELECT 
+		yearid,
+		teamid,
+		SUM(salary) as sum_salary,
+		ROW_NUMBER() OVER (PARTITION BY yearid ORDER BY sum(salary) DESC)AS rn
+	 FROM salaries
+	 GROUP BY yearid, teamid)
+SELECT
+	cte.yearid, cte.teamid, cte.sum_salary, t.w AS wins, 
+	ROUND(cte.sum_salary::NUMERIC/t.w::NUMERIC,0) as cost_per_win, cte.rn
+FROM salaries as s
+LEFT JOIN cte
+USING (yearid, teamid)
+LEFT JOIN teams as t
+ON s.yearid=t.yearid AND s.teamid=t.teamid
+WHERE cte.rn <= 3
+--AND s.yearid = 2016
+GROUP BY cte.yearid, cte.teamid, cte.sum_salary, t.w, cte.rn
+ORDER BY yearid DESC, wins DESC --rn
+--ORDER BY sum_salary DESC
+--LIMIT 3;
+
+----Top 3 Team Salaries Per Year w/ Wins and Cost Per Win
+ WITH cte AS
+  (SELECT yearid, teamid, SUM(salary),
+    ROW_NUMBER() OVER (PARTITION BY yearid ORDER BY sum(salary) DESC)AS rn
+    FROM salaries
+  	GROUP BY yearid, teamid)
+SELECT cte.yearid, cte.teamid, cte.sum AS sum_salary, teams.w AS wins, 
+	ROUND(cte.sum::NUMERIC/teams.w::NUMERIC,0) as cost_per_win, rn
+FROM cte
+LEFT JOIN teams
+ON cte.yearid=teams.yearid AND cte.teamid=teams.teamid
+WHERE rn <= 3
+ORDER BY yearid DESC, sum_salary DESC --rn 
+
+----Bottom 3 Team Salaries Per Year w/ Wins and Cost Per Win
+ WITH cte AS
+  (SELECT yearid, teamid, SUM(salary),
+    ROW_NUMBER() OVER (PARTITION BY yearid ORDER BY sum(salary) ASC)AS rn
+    FROM salaries
+  	GROUP BY yearid, teamid)
+SELECT cte.yearid, cte.teamid, cte.sum AS sum_salary, teams.w AS wins, 
+	ROUND(cte.sum::NUMERIC/teams.w::NUMERIC,0) as cost_per_win, rn
+FROM cte
+LEFT JOIN teams
+ON cte.yearid=teams.yearid AND cte.teamid=teams.teamid
+WHERE rn <= 3
+ORDER BY yearid DESC, sum_salary DESC --rn 
+
+
 
 -- 12. In this question, you will explore the connection between number of wins and attendance.
 --     <ol type="a">
