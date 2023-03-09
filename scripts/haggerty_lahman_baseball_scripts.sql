@@ -765,6 +765,7 @@ WITH cte1 AS
 	CONCAT(namelast,', ',namefirst) AS name	
 	FROM people)
 SELECT
+	--cte1.playerid,
 	cte2.playerid,
 	cte4.name,
 	cte3.hr_2016
@@ -777,7 +778,7 @@ INNER JOIN cte3 --Determine Player >= 1hr 2016 (returns 542 rows)
 USING (playerid)
 INNER JOIN cte4 --Pull info from People Table (returns 19112 rows)
 ON cte2.playerid=cte4.playerid
-GROUP BY cte2.playerid, cte4.name, cte3.hr_2016
+GROUP BY cte4.name, cte3.hr_2016,cte2.playerid --,cte1.playerid
 ORDER by cte3.hr_2016 DESC
 
 
@@ -936,6 +937,29 @@ LIMIT 10;
 --       <li>Does there appear to be any correlation between attendance at home games and number of wins? </li>
 --       <li>Do teams that win the world series see a boost in attendance the following year? What about teams that made the playoffs? Making the playoffs means either being a division winner or a wild card winner.</li>
 --     </ol>
+
+--Explore Data:
+
+--How Many NULLS
+SELECT COUNT (*), COUNT (PARK) AS park_ct, COUNT(attendance) AS attd_count
+FROM teams
+
+WITH cte1 AS
+	(SELECT
+	 	yearid,
+		ROUND(SUM(attendance)::NUMERIC/COUNT(attendance)::NUMERIC) AS yr_avg_attend,
+		ROUND(SUM(w)::NUMERIC/COUNT(w)::NUMERIC) AS yr_avg_wins
+	FROM teams
+	GROUP BY yearid)
+SELECT
+	yearid, name AS team, park, attendance, cte1.yr_avg_attend, w AS wins, cte1.yr_avg_wins
+FROM teams
+INNER JOIN cte1
+USING (yearid)
+WHERE yearid >= 2000
+GROUP BY yearid, name, park, attendance, cte1.yr_avg_attend, w, cte1.yr_avg_wins
+ORDER BY yearid DESC, attendance DESC
+
 
 
 -- 13. It is thought that since left-handed pitchers are more rare, causing batters to face them less often, that they are more effective. Investigate this claim and present evidence to either support or dispute this claim. First, determine just how rare left-handed pitchers are compared with right-handed pitchers. Are left-handed pitchers more likely to win the Cy Young Award? Are they more likely to make it into the hall of fame?
